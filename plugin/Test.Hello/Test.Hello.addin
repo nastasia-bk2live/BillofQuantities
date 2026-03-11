@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>Test.Hello</Name>
+    <Assembly>C:\Path\To\Test.Hello.dll</Assembly>
+    <AddInId>7D2B9F36-3E37-4DA7-9C0E-6EF5DA99A001</AddInId>
+    <FullClassName>Test.Hello.App</FullClassName>
+    <VendorId>TEST</VendorId>
+    <VendorDescription>Test.Hello Revit 2022 plugin</VendorDescription>
+  </AddIn>
+</RevitAddIns>
