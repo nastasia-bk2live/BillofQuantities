@@ -96,9 +96,14 @@
 ### Вариант B: MSBuild
 
 ```powershell
-nuget restore .\Test.ExportToExcel.csproj
-msbuild .\Test.ExportToExcel.csproj /p:Configuration=Release
+cd <корень_репозитория>
+nuget restore .\plugin\Test.ExportToExcel\Test.ExportToExcel.csproj
+msbuild .\plugin\Test.ExportToExcel\Test.ExportToExcel.csproj /p:Configuration=Release
 ```
+
+> Важно: в проекте используются `HintPath` к NuGet-папке `..\..\packages` (относительно `plugin/Test.ExportToExcel`).
+> Поэтому restore нужно запускать из корня репозитория или через Visual Studio Solution, чтобы папка `packages` создавалась в корне репозитория.
+
 
 ## 7. Подключение в Revit
 

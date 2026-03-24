@@ -32,16 +32,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ClosedXML, Version=0.104.2.0, Culture=neutral, PublicKeyToken=fd1eb21b62ae805b, processorArchitecture=MSIL">
-      <HintPath>packages\ClosedXML.0.104.2\lib\netstandard2.0\ClosedXML.dll</HintPath>
+      <HintPath>..\..\packages\ClosedXML.0.104.2\lib\netstandard2.0\ClosedXML.dll</HintPath>
     </Reference>
     <Reference Include="DocumentFormat.OpenXml, Version=3.2.0.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
-      <HintPath>packages\DocumentFormat.OpenXml.3.2.0\lib\netstandard2.0\DocumentFormat.OpenXml.dll</HintPath>
+      <HintPath>..\..\packages\DocumentFormat.OpenXml.3.2.0\lib\netstandard2.0\DocumentFormat.OpenXml.dll</HintPath>
     </Reference>
     <Reference Include="ExcelNumberFormat, Version=1.1.0.0, Culture=neutral, PublicKeyToken=23ad8b7e16cb50ad, processorArchitecture=MSIL">
-      <HintPath>packages\ExcelNumberFormat.1.1.0\lib\netstandard2.0\ExcelNumberFormat.dll</HintPath>
+      <HintPath>..\..\packages\ExcelNumberFormat.1.1.0\lib\netstandard2.0\ExcelNumberFormat.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.HashCode, Version=1.1.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
+      <HintPath>..\..\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
     </Reference>
     <Reference Include="netstandard" />
     <Reference Include="PresentationCore" />
