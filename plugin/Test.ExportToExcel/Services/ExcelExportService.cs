@@ -4,6 +4,8 @@ using System.IO;
 using System.IO.IsolatedStorage;
 using System.Linq;
 using ClosedXML.Excel;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 using Test.ExportToExcel.Models;
 
 namespace Test.ExportToExcel.Services
@@ -20,6 +22,27 @@ namespace Test.ExportToExcel.Services
                 throw new ArgumentNullException(nameof(data));
             }
 
+            var directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            try
+            {
+                ExportWithClosedXml(filePath, data, progressCallback);
+            }
+            catch (IsolatedStorageException)
+            {
+                // В некоторых окружениях Revit/.NET Framework ClosedXML может падать
+                // из-за internal Packaging API (IsolatedStorage identity issue).
+                // В этом случае используем надёжный fallback через NPOI.
+                ExportWithNpoi(filePath, data, progressCallback);
+            }
+        }
+
+        private static void ExportWithClosedXml(string filePath, ExportData data, Action<int, int> progressCallback)
+        {
             using (var workbook = new XLWorkbook())
             {
                 var worksheet = workbook.Worksheets.Add("Elements");
@@ -58,49 +81,73 @@ namespace Test.ExportToExcel.Services
                 }
 
                 worksheet.Columns().AdjustToContents();
-
-                var directory = Path.GetDirectoryName(filePath);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
                 SaveWorkbook(workbook, filePath);
             }
         }
 
         private static void SaveWorkbook(XLWorkbook workbook, string filePath)
         {
-            // В Revit на больших объёмах данных сохранение по пути иногда падает
-            // с IsolatedStorageException внутри Packaging API.
-            // Сохраняем через FileStream и даём fallback на временный локальный файл.
-            try
+            using (var outputStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
             {
-                using (var outputStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
-                {
-                    workbook.SaveAs(outputStream);
-                    outputStream.Flush();
-                }
+                workbook.SaveAs(outputStream);
+                outputStream.Flush();
             }
-            catch (IsolatedStorageException)
+        }
+
+        private static void ExportWithNpoi(string filePath, ExportData data, Action<int, int> progressCallback)
+        {
+            using (var workbook = new XSSFWorkbook())
             {
-                var tempFile = Path.Combine(Path.GetTempPath(), "Test.ExportToExcel_" + Guid.NewGuid().ToString("N") + ".xlsx");
-                try
+                var sheet = workbook.CreateSheet("Elements");
+                var headers = BuildHeaders(data.ParameterColumns);
+
+                var headerRow = sheet.CreateRow(0);
+                var headerStyle = workbook.CreateCellStyle();
+                var headerFont = workbook.CreateFont();
+                headerFont.IsBold = true;
+                headerStyle.SetFont(headerFont);
+
+                for (var i = 0; i < headers.Count; i++)
                 {
-                    using (var outputStream = new FileStream(tempFile, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+                    var cell = headerRow.CreateCell(i, CellType.String);
+                    cell.SetCellValue(headers[i]);
+                    cell.CellStyle = headerStyle;
+                }
+
+                for (var rowIndex = 0; rowIndex < data.Rows.Count; rowIndex++)
+                {
+                    var source = data.Rows[rowIndex];
+                    var row = sheet.CreateRow(rowIndex + 1);
+
+                    row.CreateCell(0, CellType.String).SetCellValue(source.Key ?? string.Empty);
+                    row.CreateCell(1, CellType.String).SetCellValue(source.ElementId ?? string.Empty);
+                    row.CreateCell(2, CellType.String).SetCellValue(source.Category ?? string.Empty);
+                    row.CreateCell(3, CellType.String).SetCellValue(source.Family ?? string.Empty);
+                    row.CreateCell(4, CellType.String).SetCellValue(source.Type ?? string.Empty);
+
+                    for (var paramIndex = 0; paramIndex < data.ParameterColumns.Count; paramIndex++)
                     {
-                        workbook.SaveAs(outputStream);
-                        outputStream.Flush();
+                        var column = data.ParameterColumns[paramIndex];
+                        string value;
+                        if (!source.Parameters.TryGetValue(column, out value))
+                        {
+                            value = "no";
+                        }
+
+                        row.CreateCell(5 + paramIndex, CellType.String).SetCellValue(value ?? string.Empty);
                     }
 
-                    File.Copy(tempFile, filePath, true);
+                    progressCallback?.Invoke(rowIndex + 1, data.Rows.Count);
                 }
-                finally
+
+                for (var i = 0; i < headers.Count; i++)
                 {
-                    if (File.Exists(tempFile))
-                    {
-                        File.Delete(tempFile);
-                    }
+                    sheet.AutoSizeColumn(i);
+                }
+
+                using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    workbook.Write(stream);
                 }
             }
         }

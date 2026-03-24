@@ -48,7 +48,8 @@
 - .NET Framework 4.8
 - C# 7.3
 - Revit API 2022 (`RevitAPI.dll`, `RevitAPIUI.dll`)
-- ClosedXML (экспорт XLSX)
+- ClosedXML (основной экспорт XLSX)
+- NPOI (fallback при ошибке IsolatedStorage в ClosedXML)
 - WPF (окно прогресса с Cancel)
 
 ## 4. Как работает кнопка
@@ -143,8 +144,8 @@ msbuild .\plugin\Test.ExportToExcel\Test.ExportToExcel.csproj /p:Configuration=R
 
 Что уже сделано в коде:
 
-- сохранение XLSX идёт через `FileStream`;
-- добавлен fallback: сначала сохранение во временный файл `%TEMP%`, затем копирование в целевой путь.
+- основной путь: экспорт через ClosedXML;
+- fallback: при `IsolatedStorageException` автоматическое сохранение через NPOI в тот же `.xlsx`.
 
 Практические рекомендации:
 
