@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.IO.IsolatedStorage;
 using System.Windows;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
@@ -78,6 +79,16 @@ namespace Test.ExportToExcel.Commands
                 logger.Info(ex.Message);
                 TaskDialog.Show("Экспорт в Excel", "Операция отменена пользователем.");
                 return Result.Cancelled;
+            }
+            catch (IsolatedStorageException ex)
+            {
+                logger.Error("Ошибка IsolatedStorage при экспорте в Excel.", ex);
+                message = ex.Message;
+                TaskDialog.Show(
+                    "Экспорт в Excel",
+                    "Ошибка сохранения XLSX (IsolatedStorage).\n" +
+                    "Попробуйте сохранить сначала на локальный диск, например C:\\Temp\\export.xlsx.");
+                return Result.Failed;
             }
             catch (Exception ex)
             {

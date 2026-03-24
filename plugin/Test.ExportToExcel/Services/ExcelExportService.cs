@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using ClosedXML.Excel;
 using Test.ExportToExcel.Models;
@@ -64,7 +65,43 @@ namespace Test.ExportToExcel.Services
                     Directory.CreateDirectory(directory);
                 }
 
-                workbook.SaveAs(filePath);
+                SaveWorkbook(workbook, filePath);
+            }
+        }
+
+        private static void SaveWorkbook(XLWorkbook workbook, string filePath)
+        {
+            // В Revit на больших объёмах данных сохранение по пути иногда падает
+            // с IsolatedStorageException внутри Packaging API.
+            // Сохраняем через FileStream и даём fallback на временный локальный файл.
+            try
+            {
+                using (var outputStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+                {
+                    workbook.SaveAs(outputStream);
+                    outputStream.Flush();
+                }
+            }
+            catch (IsolatedStorageException)
+            {
+                var tempFile = Path.Combine(Path.GetTempPath(), "Test.ExportToExcel_" + Guid.NewGuid().ToString("N") + ".xlsx");
+                try
+                {
+                    using (var outputStream = new FileStream(tempFile, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+                    {
+                        workbook.SaveAs(outputStream);
+                        outputStream.Flush();
+                    }
+
+                    File.Copy(tempFile, filePath, true);
+                }
+                finally
+                {
+                    if (File.Exists(tempFile))
+                    {
+                        File.Delete(tempFile);
+                    }
+                }
             }
         }
 
