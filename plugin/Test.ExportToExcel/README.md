@@ -25,7 +25,6 @@
   App.cs
   Test.ExportToExcel.csproj
   Test.ExportToExcel.addin
-  packages.config
   README.md
   /Commands
     ExportToExcelCommand.cs
@@ -87,7 +86,7 @@
 ### Вариант A: Visual Studio 2022
 
 1. Откройте `Test.ExportToExcel.csproj`.
-2. Выполните restore NuGet пакетов (`ClosedXML` и зависимости).
+2. Выполните restore NuGet пакетов (`ClosedXML` и зависимости) через PackageReference.
 3. Убедитесь, что доступны ссылки на:
    - `C:\Program Files\Autodesk\Revit 2022\RevitAPI.dll`
    - `C:\Program Files\Autodesk\Revit 2022\RevitAPIUI.dll`
@@ -97,12 +96,11 @@
 
 ```powershell
 cd <корень_репозитория>
-nuget restore .\plugin\Test.ExportToExcel\Test.ExportToExcel.csproj
+msbuild .\plugin\Test.ExportToExcel\Test.ExportToExcel.csproj /t:Restore
 msbuild .\plugin\Test.ExportToExcel\Test.ExportToExcel.csproj /p:Configuration=Release
 ```
 
-> Важно: в проекте используются `HintPath` к NuGet-папке `..\..\packages` (относительно `plugin/Test.ExportToExcel`).
-> Поэтому restore нужно запускать из корня репозитория или через Visual Studio Solution, чтобы папка `packages` создавалась в корне репозитория.
+> Проект использует `PackageReference`, поэтому отдельный `packages.config` не требуется.
 
 
 ## 7. Подключение в Revit
