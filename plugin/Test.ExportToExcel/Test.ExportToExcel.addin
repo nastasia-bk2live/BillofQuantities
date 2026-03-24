@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>Test.ExportToExcel.Application</Name>
+    <Assembly>C:\Path\To\Test.ExportToExcel.dll</Assembly>
+    <AddInId>1f6f4bc5-3378-4f1e-834d-9aa2cc9abf6c</AddInId>
+    <FullClassName>Test.ExportToExcel.App</FullClassName>
+    <VendorId>BOQ</VendorId>
+    <VendorDescription>BOQ Tools</VendorDescription>
+  </AddIn>
+  <AddIn Type="Command">
+    <Name>Test.ExportToExcel.Command</Name>
+    <Assembly>C:\Path\To\Test.ExportToExcel.dll</Assembly>
+    <AddInId>6d4a273f-66df-44a0-a489-bc21cd669f9b</AddInId>
+    <FullClassName>Test.ExportToExcel.Commands.ExportToExcelCommand</FullClassName>
+    <Text>Экспорт в Excel</Text>
+    <VendorId>BOQ</VendorId>
+    <VendorDescription>BOQ Tools</VendorDescription>
+  </AddIn>
+</RevitAddIns>
