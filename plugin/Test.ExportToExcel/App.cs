@@ -22,18 +22,12 @@ namespace Test.ExportToExcel
                 var panel = GetOrCreatePanel(application, TabName, PanelName);
                 var assemblyPath = Assembly.GetExecutingAssembly().Location;
 
-<<<<<<< codex/create-revit-add-in-for-excel-export-krhb6z
                 var csvButtonData = new PushButtonData(
                     "Test.ExportToExcel.CsvButton",
-=======
-                var buttonData = new PushButtonData(
-                    "Test.ExportToExcel.Button",
->>>>>>> main
                     "Экспорт в CSV",
                     assemblyPath,
                     "Test.ExportToExcel.Commands.ExportToExcelCommand");
 
-<<<<<<< codex/create-revit-add-in-for-excel-export-krhb6z
                 var xlsxButtonData = new PushButtonData(
                     "Test.ExportToExcel.XlsxButton",
                     "Экспорт в XLSX",
@@ -43,10 +37,6 @@ namespace Test.ExportToExcel
                 panel.AddItem(csvButtonData);
                 panel.AddItem(xlsxButtonData);
                 logger.Info("Ribbon-кнопки 'Экспорт в CSV' и 'Экспорт в XLSX' успешно добавлены.");
-=======
-                panel.AddItem(buttonData);
-                logger.Info("Ribbon-кнопка 'Экспорт в CSV' успешно добавлена.");
->>>>>>> main
                 return Result.Succeeded;
             }
             catch (Exception ex)
