@@ -10,7 +10,7 @@ namespace Test.ExportToExcel.Models
     }
 
     /// <summary>
-    /// Описание колонки параметра в итоговом Excel.
+    /// Описание колонки параметра в итоговом CSV.
     /// </summary>
     public class ParameterColumn : IEquatable<ParameterColumn>
     {

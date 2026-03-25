@@ -7,10 +7,12 @@ using Test.ExportToExcel.Models;
 namespace Test.ExportToExcel.Services
 {
     /// <summary>
-    /// Сервис сбора данных из документа Revit для последующего экспорта в Excel.
+    /// Сервис сбора данных из документа Revit для последующего экспорта в CSV.
     /// </summary>
     public class ElementExportDataService
     {
+        private const int ProgressReportStep = 200;
+
         public ExportData Collect(Document document, Action<int, int> progressCallback)
         {
             var elements = new FilteredElementCollector(document)
@@ -26,7 +28,11 @@ namespace Test.ExportToExcel.Services
                 var row = BuildRow(document, element, columnSet);
                 rows.Add(row);
 
-                progressCallback?.Invoke(index + 1, elements.Count);
+                var current = index + 1;
+                if (current % ProgressReportStep == 0 || current == elements.Count)
+                {
+                    progressCallback?.Invoke(current, elements.Count);
+                }
             }
 
             var orderedColumns = columnSet

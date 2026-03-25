@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("Test.ExportToExcel")]
-[assembly: AssemblyDescription("Revit add-in for exporting model instances to Excel")]
+[assembly: AssemblyDescription("Revit add-in for exporting model instances to CSV")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("BOQ Tools")]
 [assembly: AssemblyProduct("Test.ExportToExcel")]

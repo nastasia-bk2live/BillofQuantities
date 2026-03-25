@@ -13,7 +13,7 @@
     <Assembly>C:\Path\To\Test.ExportToExcel.dll</Assembly>
     <AddInId>6d4a273f-66df-44a0-a489-bc21cd669f9b</AddInId>
     <FullClassName>Test.ExportToExcel.Commands.ExportToExcelCommand</FullClassName>
-    <Text>Экспорт в Excel</Text>
+    <Text>Экспорт в CSV</Text>
     <VendorId>BOQ</VendorId>
     <VendorDescription>BOQ Tools</VendorDescription>
   </AddIn>

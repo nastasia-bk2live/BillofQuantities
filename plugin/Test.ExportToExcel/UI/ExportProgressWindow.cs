@@ -14,7 +14,7 @@ namespace Test.ExportToExcel.UI
 
         public ExportProgressWindow()
         {
-            Title = "Экспорт в Excel";
+            Title = "Экспорт в CSV";
             Width = 420;
             Height = 170;
             ResizeMode = ResizeMode.NoResize;

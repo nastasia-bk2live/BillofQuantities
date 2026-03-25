@@ -54,10 +54,6 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ClosedXML" Version="0.104.2" />
-    <PackageReference Include="NPOI" Version="2.7.2" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="App.cs" />
     <Compile Include="Commands\ExportToExcelCommand.cs" />
     <Compile Include="Infrastructure\FileLogger.cs" />
@@ -65,7 +61,7 @@
     <Compile Include="Models\ExportData.cs" />
     <Compile Include="Models\ParameterColumn.cs" />
     <Compile Include="Services\ElementExportDataService.cs" />
-    <Compile Include="Services\ExcelExportService.cs" />
+    <Compile Include="Services\CsvExportService.cs" />
     <Compile Include="UI\ExportProgressWindow.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

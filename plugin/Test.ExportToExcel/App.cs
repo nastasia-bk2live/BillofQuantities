@@ -24,12 +24,12 @@ namespace Test.ExportToExcel
 
                 var buttonData = new PushButtonData(
                     "Test.ExportToExcel.Button",
-                    "Экспорт в Excel",
+                    "Экспорт в CSV",
                     assemblyPath,
                     "Test.ExportToExcel.Commands.ExportToExcelCommand");
 
                 panel.AddItem(buttonData);
-                logger.Info("Ribbon-кнопка 'Экспорт в Excel' успешно добавлена.");
+                logger.Info("Ribbon-кнопка 'Экспорт в CSV' успешно добавлена.");
                 return Result.Succeeded;
             }
             catch (Exception ex)
