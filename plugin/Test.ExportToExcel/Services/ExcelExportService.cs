@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.IsolatedStorage;
 using System.Linq;
+using System.Text;
 using ClosedXML.Excel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
@@ -15,6 +16,11 @@ namespace Test.ExportToExcel.Services
     /// </summary>
     public class ExcelExportService
     {
+        private const int MaxExcelRows = 1048576;
+        private const int MaxExcelColumns = 16384;
+        private const int FixedColumnsCount = 5;
+        private const int MaxCellLength = 32767;
+
         public void Export(string filePath, ExportData data, Action<int, int> progressCallback)
         {
             if (data == null)
@@ -45,42 +51,21 @@ namespace Test.ExportToExcel.Services
         {
             using (var workbook = new XLWorkbook())
             {
-                var worksheet = workbook.Worksheets.Add("Elements");
-                var headers = BuildHeaders(data.ParameterColumns);
-
-                for (var i = 0; i < headers.Count; i++)
-                {
-                    worksheet.Cell(1, i + 1).Value = headers[i];
-                    worksheet.Cell(1, i + 1).Style.Font.Bold = true;
-                }
-
-                for (var rowIndex = 0; rowIndex < data.Rows.Count; rowIndex++)
-                {
-                    var row = data.Rows[rowIndex];
-                    var excelRow = rowIndex + 2;
-
-                    worksheet.Cell(excelRow, 1).Value = row.Key;
-                    worksheet.Cell(excelRow, 2).Value = row.ElementId;
-                    worksheet.Cell(excelRow, 3).Value = row.Category;
-                    worksheet.Cell(excelRow, 4).Value = row.Family;
-                    worksheet.Cell(excelRow, 5).Value = row.Type;
-
-                    for (var paramIndex = 0; paramIndex < data.ParameterColumns.Count; paramIndex++)
+                WriteData(
+                    data,
+                    progressCallback,
+                    createSheet: name => workbook.Worksheets.Add(name),
+                    setCell: (sheet, row, col, value, isHeader) =>
                     {
-                        var column = data.ParameterColumns[paramIndex];
-                        string value;
-                        if (!row.Parameters.TryGetValue(column, out value))
+                        var cell = sheet.Cell(row, col);
+                        cell.Value = value;
+                        if (isHeader)
                         {
-                            value = "no";
+                            cell.Style.Font.Bold = true;
                         }
+                    },
+                    autoFit: sheet => sheet.Columns().AdjustToContents());
 
-                        worksheet.Cell(excelRow, 6 + paramIndex).Value = value ?? string.Empty;
-                    }
-
-                    progressCallback?.Invoke(rowIndex + 1, data.Rows.Count);
-                }
-
-                worksheet.Columns().AdjustToContents();
                 SaveWorkbook(workbook, filePath);
             }
         }
@@ -98,58 +83,180 @@ namespace Test.ExportToExcel.Services
         {
             using (var workbook = new XSSFWorkbook())
             {
-                var sheet = workbook.CreateSheet("Elements");
-                var headers = BuildHeaders(data.ParameterColumns);
-
-                var headerRow = sheet.CreateRow(0);
-                var headerStyle = workbook.CreateCellStyle();
-                var headerFont = workbook.CreateFont();
-                headerFont.IsBold = true;
-                headerStyle.SetFont(headerFont);
-
-                for (var i = 0; i < headers.Count; i++)
-                {
-                    var cell = headerRow.CreateCell(i, CellType.String);
-                    cell.SetCellValue(headers[i]);
-                    cell.CellStyle = headerStyle;
-                }
-
-                for (var rowIndex = 0; rowIndex < data.Rows.Count; rowIndex++)
-                {
-                    var source = data.Rows[rowIndex];
-                    var row = sheet.CreateRow(rowIndex + 1);
-
-                    row.CreateCell(0, CellType.String).SetCellValue(source.Key ?? string.Empty);
-                    row.CreateCell(1, CellType.String).SetCellValue(source.ElementId ?? string.Empty);
-                    row.CreateCell(2, CellType.String).SetCellValue(source.Category ?? string.Empty);
-                    row.CreateCell(3, CellType.String).SetCellValue(source.Family ?? string.Empty);
-                    row.CreateCell(4, CellType.String).SetCellValue(source.Type ?? string.Empty);
-
-                    for (var paramIndex = 0; paramIndex < data.ParameterColumns.Count; paramIndex++)
+                WriteData(
+                    data,
+                    progressCallback,
+                    createSheet: name => workbook.CreateSheet(name),
+                    setCell: (sheet, row, col, value, isHeader) =>
                     {
-                        var column = data.ParameterColumns[paramIndex];
-                        string value;
-                        if (!source.Parameters.TryGetValue(column, out value))
+                        var npoiRow = sheet.GetRow(row - 1) ?? sheet.CreateRow(row - 1);
+                        var cell = npoiRow.CreateCell(col - 1, CellType.String);
+                        cell.SetCellValue(value ?? string.Empty);
+
+                        if (isHeader)
                         {
-                            value = "no";
+                            var style = workbook.CreateCellStyle();
+                            var font = workbook.CreateFont();
+                            font.IsBold = true;
+                            style.SetFont(font);
+                            cell.CellStyle = style;
+                        }
+                    },
+                    autoFit: sheet =>
+                    {
+                        var firstRow = sheet.GetRow(0);
+                        if (firstRow == null)
+                        {
+                            return;
                         }
 
-                        row.CreateCell(5 + paramIndex, CellType.String).SetCellValue(value ?? string.Empty);
-                    }
-
-                    progressCallback?.Invoke(rowIndex + 1, data.Rows.Count);
-                }
-
-                for (var i = 0; i < headers.Count; i++)
-                {
-                    sheet.AutoSizeColumn(i);
-                }
+                        var cellCount = firstRow.LastCellNum;
+                        for (var i = 0; i < cellCount; i++)
+                        {
+                            sheet.AutoSizeColumn(i);
+                        }
+                    });
 
                 using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     workbook.Write(stream);
                 }
             }
+        }
+
+        private static void WriteData<TSheet>(
+            ExportData data,
+            Action<int, int> progressCallback,
+            Func<string, TSheet> createSheet,
+            Action<TSheet, int, int, string, bool> setCell,
+            Action<TSheet> autoFit)
+        {
+            var allHeaders = BuildHeaders(data.ParameterColumns);
+            var maxParameterColumnsPerSheet = Math.Max(1, MaxExcelColumns - FixedColumnsCount);
+            var parameterChunks = SplitIntoChunks(data.ParameterColumns.Count, maxParameterColumnsPerSheet).ToList();
+            var rowChunks = SplitIntoChunks(data.Rows.Count, MaxExcelRows - 1).ToList();
+
+            var progressReported = 0;
+            var totalProgress = Math.Max(data.Rows.Count, 1);
+
+            for (var rowChunkIndex = 0; rowChunkIndex < rowChunks.Count; rowChunkIndex++)
+            {
+                var rowChunk = rowChunks[rowChunkIndex];
+
+                for (var paramChunkIndex = 0; paramChunkIndex < parameterChunks.Count; paramChunkIndex++)
+                {
+                    var paramChunk = parameterChunks[paramChunkIndex];
+                    var sheetName = BuildSheetName(rowChunkIndex, paramChunkIndex);
+                    var sheet = createSheet(sheetName);
+
+                    WriteHeadersForChunk(allHeaders, paramChunk, setCell, sheet);
+
+                    for (var localRowIndex = 0; localRowIndex < rowChunk.Count; localRowIndex++)
+                    {
+                        var sourceRow = data.Rows[rowChunk.Start + localRowIndex];
+                        var excelRow = localRowIndex + 2;
+
+                        setCell(sheet, excelRow, 1, SanitizeForExcel(sourceRow.Key), false);
+                        setCell(sheet, excelRow, 2, SanitizeForExcel(sourceRow.ElementId), false);
+                        setCell(sheet, excelRow, 3, SanitizeForExcel(sourceRow.Category), false);
+                        setCell(sheet, excelRow, 4, SanitizeForExcel(sourceRow.Family), false);
+                        setCell(sheet, excelRow, 5, SanitizeForExcel(sourceRow.Type), false);
+
+                        for (var localParamIndex = 0; localParamIndex < paramChunk.Count; localParamIndex++)
+                        {
+                            var globalParamIndex = paramChunk.Start + localParamIndex;
+                            var column = data.ParameterColumns[globalParamIndex];
+                            string value;
+                            if (!sourceRow.Parameters.TryGetValue(column, out value))
+                            {
+                                value = "no";
+                            }
+
+                            setCell(sheet, excelRow, FixedColumnsCount + localParamIndex + 1, SanitizeForExcel(value), false);
+                        }
+
+                        if (paramChunkIndex == 0)
+                        {
+                            progressReported++;
+                            progressCallback?.Invoke(progressReported, totalProgress);
+                        }
+                    }
+
+                    autoFit(sheet);
+                }
+            }
+        }
+
+        private static void WriteHeadersForChunk<TSheet>(
+            IList<string> allHeaders,
+            Chunk paramChunk,
+            Action<TSheet, int, int, string, bool> setCell,
+            TSheet sheet)
+        {
+            for (var fixedCol = 0; fixedCol < FixedColumnsCount; fixedCol++)
+            {
+                setCell(sheet, 1, fixedCol + 1, SanitizeForExcel(allHeaders[fixedCol]), true);
+            }
+
+            for (var localParamIndex = 0; localParamIndex < paramChunk.Count; localParamIndex++)
+            {
+                var globalHeaderIndex = FixedColumnsCount + paramChunk.Start + localParamIndex;
+                var headerName = allHeaders[globalHeaderIndex];
+                setCell(sheet, 1, FixedColumnsCount + localParamIndex + 1, SanitizeForExcel(headerName), true);
+            }
+        }
+
+        private static IEnumerable<Chunk> SplitIntoChunks(int totalItems, int chunkSize)
+        {
+            if (totalItems <= 0)
+            {
+                yield return new Chunk(0, 0);
+                yield break;
+            }
+
+            for (var start = 0; start < totalItems; start += chunkSize)
+            {
+                var count = Math.Min(chunkSize, totalItems - start);
+                yield return new Chunk(start, count);
+            }
+        }
+
+        private static string BuildSheetName(int rowChunkIndex, int paramChunkIndex)
+        {
+            // Ограничение Excel: имя листа <= 31 символ.
+            var raw = string.Format("Elements_R{0}_P{1}", rowChunkIndex + 1, paramChunkIndex + 1);
+            return raw.Length <= 31 ? raw : raw.Substring(0, 31);
+        }
+
+        private static string SanitizeForExcel(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            var builder = new StringBuilder(value.Length);
+            for (var i = 0; i < value.Length; i++)
+            {
+                var ch = value[i];
+                if (IsAllowedXmlChar(ch))
+                {
+                    builder.Append(ch);
+                }
+            }
+
+            var sanitized = builder.ToString();
+            if (sanitized.Length > MaxCellLength)
+            {
+                sanitized = sanitized.Substring(0, MaxCellLength);
+            }
+
+            return sanitized;
+        }
+
+        private static bool IsAllowedXmlChar(char ch)
+        {
+            return ch == 0x9 || ch == 0xA || ch == 0xD || (ch >= 0x20 && ch <= 0xD7FF) || (ch >= 0xE000 && ch <= 0xFFFD);
         }
 
         private static IList<string> BuildHeaders(IList<ParameterColumn> parameterColumns)
@@ -181,6 +288,19 @@ namespace Test.ExportToExcel.Services
             }
 
             return headers;
+        }
+
+        private struct Chunk
+        {
+            public Chunk(int start, int count)
+            {
+                Start = start;
+                Count = count;
+            }
+
+            public int Start { get; }
+
+            public int Count { get; }
         }
     }
 }
