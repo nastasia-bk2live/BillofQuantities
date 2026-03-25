@@ -1,6 +1,10 @@
 # Test.ExportToExcel (Revit 2022)
 
+<<<<<<< codex/create-revit-add-in-for-excel-export-krhb6z
+Плагин для Autodesk Revit 2022, который добавляет кнопки **«Экспорт в CSV»** и **«Экспорт в XLSX»** в Ribbon и выгружает экземпляры элементов модели в `.csv` и `.xlsx`.
+=======
 Плагин для Autodesk Revit 2022, который добавляет кнопку **«Экспорт в CSV»** в Ribbon и выгружает экземпляры элементов модели в `.csv`.
+>>>>>>> main
 
 ## 1. Что делает плагин
 
@@ -19,9 +23,14 @@
 
 ## 2. Формат выгрузки
 
+<<<<<<< codex/create-revit-add-in-for-excel-export-krhb6z
+- Формат 1: **CSV** (UTF-8 BOM, разделитель `;`)
+- Формат 2: **XLSX**
+=======
 - Формат: **CSV**
 - Кодировка: **UTF-8 BOM**
 - Разделитель: `;` (удобно для русской локали Excel)
+>>>>>>> main
 
 ## 3. Структура проекта
 
@@ -33,6 +42,10 @@
   README.md
   /Commands
     ExportToExcelCommand.cs
+<<<<<<< codex/create-revit-add-in-for-excel-export-krhb6z
+    ExportToXlsxCommand.cs
+=======
+>>>>>>> main
   /Infrastructure
     FileLogger.cs
   /Models
@@ -42,6 +55,10 @@
   /Services
     ElementExportDataService.cs
     CsvExportService.cs
+<<<<<<< codex/create-revit-add-in-for-excel-export-krhb6z
+    XlsxExportService.cs
+=======
+>>>>>>> main
   /UI
     ExportProgressWindow.cs
   /Properties
@@ -50,8 +67,13 @@
 
 ## 4. UX в Revit
 
+<<<<<<< codex/create-revit-add-in-for-excel-export-krhb6z
+1. Кнопки: вкладка `BOQ Tools` → панель `Export` → **«Экспорт в CSV»** и **«Экспорт в XLSX»**.
+2. Открывается `SaveFileDialog` с нужным фильтром (`*.csv` или `*.xlsx`).
+=======
 1. Кнопка: вкладка `BOQ Tools` → панель `Export` → **«Экспорт в CSV»**.
 2. Открывается `SaveFileDialog` с фильтром `*.csv`.
+>>>>>>> main
 3. Показывается прогресс-окно с кнопкой `Cancel`.
 
 ## 5. Логирование
