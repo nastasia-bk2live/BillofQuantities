@@ -54,27 +54,19 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-<<<<<<< codex/create-revit-add-in-for-excel-export-krhb6z
     <PackageReference Include="NPOI" Version="2.7.2" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.cs" />
     <Compile Include="Commands\ExportToExcelCommand.cs" />
     <Compile Include="Commands\ExportToXlsxCommand.cs" />
-=======
-    <Compile Include="App.cs" />
-    <Compile Include="Commands\ExportToExcelCommand.cs" />
->>>>>>> main
     <Compile Include="Infrastructure\FileLogger.cs" />
     <Compile Include="Models\ElementExportRow.cs" />
     <Compile Include="Models\ExportData.cs" />
     <Compile Include="Models\ParameterColumn.cs" />
     <Compile Include="Services\ElementExportDataService.cs" />
     <Compile Include="Services\CsvExportService.cs" />
-<<<<<<< codex/create-revit-add-in-for-excel-export-krhb6z
     <Compile Include="Services\XlsxExportService.cs" />
-=======
->>>>>>> main
     <Compile Include="UI\ExportProgressWindow.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
